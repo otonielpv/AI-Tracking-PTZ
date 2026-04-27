@@ -19,6 +19,12 @@ python -m ai_tracking_ptz.apps.milestone1_rtsp_viewer --rtsp-url "rtsp://usuario
 
 Opcionalmente puedes pasar `--width` y `--height` si quieres solicitar una resolucion especifica al stream. Por defecto el visor usa RTSP sobre TCP para reducir cortes y problemas de transporte en Windows.
 
+Si la camara requiere autenticacion, el usuario y la contraseña deben ir dentro de la URL RTSP, por ejemplo:
+
+```powershell
+python -m ai_tracking_ptz.apps.milestone1_rtsp_viewer --rtsp-url "rtsp://usuario:password@192.168.1.120:554/stream" --rtsp-transport tcp
+```
+
 ## Ejecucion Hito 2
 
 Hito 2 integra Ultralytics con el modelo Nano, detecta solo la clase `person`, usa tracking con BoT-SORT y limita la inferencia a 15 FPS como maximo para no castigar VRAM ni GPU mientras haces streaming.
@@ -46,11 +52,11 @@ Notas practicas:
 
 ## Ejecucion Hito 3
 
-Hito 3 agrega un cliente VISCA over IP independiente para mover la camara por red y un tester por teclado. Esta implementacion parte de VISCA over IP estilo Sony, con puerto por defecto `52381` y transporte `udp`.
+Hito 3 ahora usa ONVIF PTZ autenticado, que encaja con tu camara si el control requiere usuario y contraseña. El tester por teclado crea una sesion ONVIF, toma el primer perfil de media disponible y manda comandos `ContinuousMove` y `Stop`.
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m ai_tracking_ptz.apps.milestone3_visca_keyboard_test --host "192.168.1.120" --transport udp --pan-speed 12 --tilt-speed 10 --zoom-speed 3
+python -m ai_tracking_ptz.apps.milestone3_onvif_keyboard_test --host "192.168.1.120" --port 80 --username "admin" --password "tu_password" --pan-speed 0.5 --tilt-speed 0.5 --zoom-speed 0.3
 ```
 
 Controles del tester:
@@ -66,10 +72,11 @@ Controles del tester:
 
 Notas practicas:
 
-- Pan usa velocidad `1-24`.
-- Tilt se limita internamente a `1-20`, que es el maximo comun VISCA para tilt.
-- Zoom variable usa `0-7` en VISCA; el tester parte de `3`.
-- Si tu camara no responde por `udp`, prueba de nuevo con `--transport tcp`.
+- Las velocidades ONVIF aqui se expresan en rango `0.0-1.0`.
+- Si tu servicio ONVIF no escucha en `80`, ajusta `--port` al puerto real del dispositivo.
+- Si `onvif-zeep` no encuentra los WSDL automaticamente en tu entorno, pasa `--wsdl-dir` con la ruta local correspondiente.
+- El canal RTSP sigue usando credenciales dentro de la URL; el canal PTZ ONVIF usa `--username` y `--password` como autenticacion separada.
+- El tester VISCA anterior se mantiene en el repo como referencia, pero ya no es el camino principal para esta camara.
 
 ## Prueba sin camara
 
