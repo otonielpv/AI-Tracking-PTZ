@@ -100,6 +100,22 @@ Controles del emulador:
 
 La ventana `Virtual PTZ Source` muestra el frame completo con el viewport actual y `Virtual PTZ Output` muestra lo que veria la camara virtual. Esa es la base util para desarrollar el Hito 4 sin depender aun del hardware ONVIF.
 
+## Ejecucion Hito 4
+
+Hito 4 une tracking y control. En esta etapa se ejecuta YOLO sobre la salida de la PTZ virtual, se selecciona como objetivo la persona mas grande en pantalla y un PID calcula velocidades de `pan` y `tilt` para recentrarla. Todavia no aplica selector manual ni logica de iglesia; eso queda para Hito 5.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m ai_tracking_ptz.apps.milestone4_virtual_pid_tracking --video-file ".\samples\people.mp4" --loop-video --model yolov8n.pt --tracker botsort.yaml --imgsz 640 --max-inference-fps 15
+```
+
+Notas practicas:
+
+- La ventana `Milestone 4 - Source` muestra el video fuente y el viewport actual de la PTZ virtual.
+- La ventana principal muestra la salida virtual con bounding boxes, ID del tracker, deadzone central y velocidades calculadas por el PID.
+- El objetivo actual se elige por area de bounding box. Es una aproximacion temporal para validar el lazo de control antes del selector manual del Hito 5.
+- Los parametros `--pid-pan-*`, `--pid-tilt-*`, `--deadzone-x` y `--deadzone-y` estan expuestos para ajuste fino.
+
 ## Prueba sin camara
 
 La opcion mas rapida es probar con un RTSP publico. Estos endpoints a veces dejan de responder, asi que sirven para validacion puntual, no para pruebas repetibles.
