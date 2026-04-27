@@ -78,6 +78,28 @@ Notas practicas:
 - El canal RTSP sigue usando credenciales dentro de la URL; el canal PTZ ONVIF usa `--username` y `--password` como autenticacion separada.
 - El tester VISCA anterior se mantiene en el repo como referencia, pero ya no es el camino principal para esta camara.
 
+## PTZ Virtual
+
+Para desarrollar sin hardware real, el repo incluye una PTZ virtual que simula `pan`, `tilt` y `zoom` sobre un video local. No emula ONVIF en red, pero si replica la semantica de movimiento continuo y sirve para afinar la logica de seguimiento y PID antes de conectar la camara real.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m ai_tracking_ptz.apps.virtual_ptz_keyboard_test --video-file ".\samples\people.mp4" --loop-video --width 1280 --height 720 --max-zoom 4.0 --pan-speed 0.5 --tilt-speed 0.5 --zoom-speed 0.4
+```
+
+Controles del emulador:
+
+- `W` inclinacion arriba
+- `S` inclinacion abajo
+- `A` paneo izquierda
+- `D` paneo derecha
+- `Z` zoom out
+- `X` zoom in
+- `Space` stop
+- `Q` salir
+
+La ventana `Virtual PTZ Source` muestra el frame completo con el viewport actual y `Virtual PTZ Output` muestra lo que veria la camara virtual. Esa es la base util para desarrollar el Hito 4 sin depender aun del hardware ONVIF.
+
 ## Prueba sin camara
 
 La opcion mas rapida es probar con un RTSP publico. Estos endpoints a veces dejan de responder, asi que sirven para validacion puntual, no para pruebas repetibles.
