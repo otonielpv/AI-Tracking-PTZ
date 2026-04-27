@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local settings and editor state
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Model weights and exported engines
+*.pt
+*.onnx
+*.engine
+
+# Ultralytics outputs
+runs/
+
+# Video and temporary media artifacts
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.tmp
