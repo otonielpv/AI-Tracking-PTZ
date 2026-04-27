@@ -102,7 +102,7 @@ La ventana `Virtual PTZ Source` muestra el frame completo con el viewport actual
 
 ## Ejecucion Hito 4
 
-Hito 4 une tracking y control. En esta etapa se ejecuta YOLO sobre la salida de la PTZ virtual, se selecciona como objetivo la persona mas grande en pantalla y un PID calcula velocidades de `pan` y `tilt` para recentrarla. Todavia no aplica selector manual ni logica de iglesia; eso queda para Hito 5.
+Hito 4 une tracking y control. En esta etapa se ejecuta YOLO sobre la salida de la PTZ virtual, se selecciona como objetivo la persona mas grande en pantalla y un PID calcula velocidades de `pan` y `tilt` para recentrarla. Todavia no aplica la logica final de automatizacion por MIDI; eso queda para Hito 5.
 
 ```powershell
 $env:PYTHONPATH = "src"
@@ -113,8 +113,36 @@ Notas practicas:
 
 - La ventana `Milestone 4 - Source` muestra el video fuente y el viewport actual de la PTZ virtual.
 - La ventana principal muestra la salida virtual con bounding boxes, ID del tracker, deadzone central y velocidades calculadas por el PID.
-- El objetivo actual se elige por area de bounding box. Es una aproximacion temporal para validar el lazo de control antes del selector manual del Hito 5.
+- El objetivo actual se elige por area de bounding box. Es una aproximacion temporal para validar el lazo de control antes de la logica automatica definitiva del Hito 5.
 - Los parametros `--pid-pan-*`, `--pid-tilt-*`, `--deadzone-x` y `--deadzone-y` estan expuestos para ajuste fino.
+
+## Direccion Hito 5
+
+Hito 5 ya no se planteara con seleccion manual de objetivo. El comportamiento deseado es totalmente automatico y orientado a operacion en vivo con FreeShow mediante comandos MIDI.
+
+Objetivos funcionales del Hito 5:
+
+- Activar o desactivar AI tracking por eventos MIDI, sin interaccion con raton ni teclado.
+- Elegir automaticamente el objetivo principal con la menor configuracion manual posible.
+- Mantener estabilidad del objetivo para no saltar entre personas cercanas.
+- Conservar deadzones, suavidad y seguridad del movimiento antes de pasar a ONVIF real.
+- Exportar y validar el modelo en TensorRT (`.engine`) para aprovechar mejor la GPU final sin comprometer OBS o vMix.
+
+Direccion tecnica prevista:
+
+- Un listener MIDI recibira comandos tipo `tracking on`, `tracking off` y opcionalmente `reacquire target`.
+- La seleccion del objetivo dejara de depender de clics y pasara a una heuristica automatica: prioridad por persistencia del tracker, tamaño relativo, posicion central y confianza.
+- Cuando AI tracking este desactivado por MIDI, la camara dejara de enviar correcciones y permanecera en stop.
+- Cuando AI tracking se reactive, el sistema reacquirira automaticamente al mejor candidato visible.
+- La ruta de despliegue final del detector no se quedara en `yolov8n.pt`: en el PC definitivo se exportara a TensorRT y se comparara consumo de VRAM, latencia y estabilidad frente a la version PyTorch para elegir el backend final.
+
+Notas de despliegue para TensorRT:
+
+- Esta parte solo tiene sentido cerrarla en el PC final con la RTX 3050, porque el `.engine` depende de la GPU, drivers, CUDA y TensorRT instalados.
+- El objetivo no es solo subir FPS, sino reducir latencia y carga de GPU para convivir con OBS o vMix.
+- La exportacion a `.engine` debe hacerse al final del flujo, cuando la logica de tracking y control ya este estable.
+
+Esto encaja mejor con un flujo de iglesia automatizado, donde FreeShow actua como orquestador y el operador no tiene que intervenir en cada seguimiento.
 
 ## Prueba sin camara
 
