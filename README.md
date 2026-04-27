@@ -44,6 +44,33 @@ Notas practicas:
 - Si CUDA no esta disponible, Ultralytics caera a CPU automaticamente.
 - En pantalla veras bounding boxes, confianza e ID del tracker para cada persona detectada.
 
+## Ejecucion Hito 3
+
+Hito 3 agrega un cliente VISCA over IP independiente para mover la camara por red y un tester por teclado. Esta implementacion parte de VISCA over IP estilo Sony, con puerto por defecto `52381` y transporte `udp`.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m ai_tracking_ptz.apps.milestone3_visca_keyboard_test --host "192.168.1.120" --transport udp --pan-speed 12 --tilt-speed 10 --zoom-speed 3
+```
+
+Controles del tester:
+
+- `W` inclinacion arriba
+- `S` inclinacion abajo
+- `A` paneo izquierda
+- `D` paneo derecha
+- `Z` zoom out
+- `X` zoom in
+- `Space` stop
+- `Q` salir
+
+Notas practicas:
+
+- Pan usa velocidad `1-24`.
+- Tilt se limita internamente a `1-20`, que es el maximo comun VISCA para tilt.
+- Zoom variable usa `0-7` en VISCA; el tester parte de `3`.
+- Si tu camara no responde por `udp`, prueba de nuevo con `--transport tcp`.
+
 ## Prueba sin camara
 
 La opcion mas rapida es probar con un RTSP publico. Estos endpoints a veces dejan de responder, asi que sirven para validacion puntual, no para pruebas repetibles.
