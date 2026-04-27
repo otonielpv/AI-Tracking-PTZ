@@ -144,6 +144,46 @@ Notas de despliegue para TensorRT:
 
 Esto encaja mejor con un flujo de iglesia automatizado, donde FreeShow actua como orquestador y el operador no tiene que intervenir en cada seguimiento.
 
+## Ejecucion Hito 5
+
+Hito 5 implementa el flujo automatico: estado `tracking on/off` controlado por MIDI, selector automatico de objetivo con memoria de tracker y lazo PID sobre la PTZ virtual. El modelo puede ser `.pt` o `.engine`, asi que este mismo flujo sirve para validar la transicion a TensorRT cuando llegues al PC final.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m ai_tracking_ptz.apps.milestone5_midi_auto_tracking --video-file ".\samples\people.mp4" --loop-video --model yolov8n.pt --tracker botsort.yaml --imgsz 640 --max-inference-fps 15 --start-enabled
+```
+
+Opcionalmente puedes conectar un puerto MIDI de FreeShow:
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m ai_tracking_ptz.apps.milestone5_midi_auto_tracking --video-file ".\samples\people.mp4" --loop-video --midi-input-name "LoopMIDI Port" --midi-channel 0 --midi-toggle-note 60 --midi-enable-note 61 --midi-disable-note 62 --midi-reacquire-note 63 --start-enabled
+```
+
+Comportamiento del Hito 5:
+
+- Cuando `tracking` esta activado, el selector automatico puntua candidatos por area, cercania al centro, confianza y persistencia del tracker.
+- Cuando `tracking` esta desactivado por MIDI, el sistema deja de corregir movimiento y la camara queda en `stop`.
+- Un evento MIDI de `reacquire` limpia el lock actual y obliga a buscar el mejor candidato visible otra vez.
+- El overlay muestra puerto MIDI, ultimo evento MIDI, target lock actual y backend de modelo cargado.
+
+Notas practicas:
+
+- Si no pasas `--midi-input-name`, el flujo sigue funcionando y el estado queda local al proceso.
+- Para usar MIDI real en Windows, normalmente necesitaras un puerto virtual como loopMIDI o el puerto expuesto por FreeShow.
+- Este flujo aun usa PTZ virtual como backend de seguridad para afinar heuristicas y PID antes de mover la camara ONVIF real.
+
+## Exportacion TensorRT
+
+Cuando pases al PC final con la RTX 3050, puedes exportar el detector a TensorRT asi:
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m ai_tracking_ptz.apps.export_tensorrt_engine --model yolov8n.pt --imgsz 640 --device cuda:0 --half --workspace 4
+```
+
+Si la exportacion genera `yolov8n.engine`, luego puedes reutilizarlo directamente en Hito 5 cambiando `--model yolov8n.engine`.
+
 ## Prueba sin camara
 
 La opcion mas rapida es probar con un RTSP publico. Estos endpoints a veces dejan de responder, asi que sirven para validacion puntual, no para pruebas repetibles.
